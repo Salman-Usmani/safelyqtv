@@ -17,13 +17,18 @@
           }
         }
       ],
+      "@react-native-firebase/app",
+      ["expo-build-properties"],
       "expo-router",
-      "expo-font"
+      "expo-font",
+      "expo-audio"
     ],
     "android": {
       "splash": {
         "image": "./assets/images/splash.png"
-      }
+      },
+      "googleServicesFile": "./google-services.json",
+      "package": "com.safelyqtv"
     },
     "ios": {
       "splash": {

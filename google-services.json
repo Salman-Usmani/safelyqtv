@@ -1,0 +1,118 @@
+{
+  "project_info": {
+    "project_number": "347896043072",
+    "project_id": "safelyq-crashlytics",
+    "storage_bucket": "safelyq-crashlytics.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:347896043072:android:36e8a16492040cbdd831a5",
+        "android_client_info": {
+          "package_name": "com.safelyq"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "347896043072-ncab2oq79lv695775u49l3jckbr84uhs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC12jQLkjyhsjCSzvBLTaRh9gjNubU3Ro"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "347896043072-ncab2oq79lv695775u49l3jckbr84uhs.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "347896043072-3orbalcqg3tin9kgjm7q40oerr5tvcig.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.safelyq.user"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:347896043072:android:9605e60a91a82410d831a5",
+        "android_client_info": {
+          "package_name": "com.safelyqadmin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "347896043072-ncab2oq79lv695775u49l3jckbr84uhs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC12jQLkjyhsjCSzvBLTaRh9gjNubU3Ro"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "347896043072-ncab2oq79lv695775u49l3jckbr84uhs.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "347896043072-3orbalcqg3tin9kgjm7q40oerr5tvcig.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.safelyq.user"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:347896043072:android:75341507e84c0b2fd831a5",
+        "android_client_info": {
+          "package_name": "com.safelyqtv"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "347896043072-ncab2oq79lv695775u49l3jckbr84uhs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC12jQLkjyhsjCSzvBLTaRh9gjNubU3Ro"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "347896043072-ncab2oq79lv695775u49l3jckbr84uhs.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "347896043072-3orbalcqg3tin9kgjm7q40oerr5tvcig.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.safelyq.user"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
