@@ -5,6 +5,7 @@ import { NoData } from "@/components/NoData";
 import { AuthContext } from "@/context";
 import { GET_USER_LOCATIONS } from "@/requests";
 import { useLazyQuery } from "@apollo/client";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useContext, useEffect } from "react";
 import {

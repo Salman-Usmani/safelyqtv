@@ -5,6 +5,9 @@ export const AuthContext = React.createContext({
   signIn: () => {},
   signOut: () => {},
   signInTV: (email: string, password: string) => {},
+  handleRefresh: async (refreshToken: string) => {
+    return Promise<boolean>;
+  },
 });
 export const UserInformation = React.createContext({
   userInfo: {} as user | null,

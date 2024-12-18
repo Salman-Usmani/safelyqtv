@@ -6,7 +6,7 @@ const config: AuthConfiguration = {
   clientId: `${Config.CLIENT_ID}`,
   redirectUrl: `${Config.REDIRECT_URL}`,
   additionalParameters: { prompt: "login" },
-  scopes: ["openid", "profile", "email"],
+  scopes: ["openid", "profile", "email", "offline_access"],
   serviceConfiguration: {
     authorizationEndpoint: `${Config.AUTHORIZATION_END_POINT}`,
     tokenEndpoint: `${Config.TOKEN_END_POINT}`,

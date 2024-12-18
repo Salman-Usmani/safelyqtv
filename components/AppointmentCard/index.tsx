@@ -1,4 +1,5 @@
 import { Icons } from "@/constants/icons";
+import { Status } from "@/constants/Status";
 import {
   getName,
   getStatusColor,
@@ -7,15 +8,23 @@ import {
   getStatusTileColor,
 } from "@/utils";
 import React, { useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
 
-export const AppointmentTVCard = ({ appoitment }: any) => {
+export const AppointmentTVCard = ({ appoitment, onPressCheckIn }: any) => {
   const { user, service, totalGuests, venueEntrance, status } = appoitment;
   // TODO first letter of user name and last name
   // else last 4 digits of phone number (xxx-1111)
   // else first 6 digits of email (5o%) (aaa...@)
   const isUser = getName(user); //user?.fullName ? user?.fullName : user?.email;
-
+  const isActionRequeired =
+    status?.toUpperCase() === Status.booked ||
+    status?.toUpperCase() === Status.confirmed;
   return (
     <View style={[styles({ status }).container]}>
       <Text style={noArgumentsStyles.guestContainer}>
@@ -35,6 +44,20 @@ export const AppointmentTVCard = ({ appoitment }: any) => {
       <Text style={styles({ status }).statusColor}>
         {getStatusName(status)}
       </Text>
+
+      {!Platform.isTV && isActionRequeired && (
+        <TouchableOpacity
+          style={noArgumentsStyles.statusView}
+          onPress={() => {
+            onPressCheckIn(appoitment);
+            // navigation.navigate('checkin')
+            // setAppt(appointment);
+            // setIsVisible(true);
+          }}
+        >
+          <Text style={noArgumentsStyles.btnText}> Check-in Now </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -85,6 +108,13 @@ export const styles = ({ status }: { status: string }) =>
       backgroundColor: getStatusColor(status),
       // marginRight: 15,
     },
+    statusView: {
+      height: "auto",
+      alignItems: "center",
+      borderRadius: 5,
+      padding: 4,
+      backgroundColor: "#2887ef",
+    },
   });
 export const noArgumentsStyles = StyleSheet.create({
   guestContainer: {
@@ -111,4 +141,12 @@ export const noArgumentsStyles = StyleSheet.create({
     rowGap: 15,
     columnGap: 20,
   },
+  statusView: {
+    height: "auto",
+    alignItems: "center",
+    borderRadius: 5,
+    padding: 4,
+    backgroundColor: "#2887ef",
+  },
+  btnText: { color: "white" },
 });

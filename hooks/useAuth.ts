@@ -1,11 +1,11 @@
-import {
-  ApolloClient,
-  HttpLink,
-  InMemoryCache,
-  NormalizedCacheObject,
-} from "@apollo/client";
-import { config } from "../config";
+import { user } from "@/types";
+import { ApolloClient, from, HttpLink, InMemoryCache } from "@apollo/client";
+import { removeTypenameFromVariables } from "@apollo/client/link/remove-typename";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import { router } from "expo-router";
+import { jwtDecode } from "jwt-decode";
+import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Keyboard, Platform } from "react-native";
 import {
@@ -16,15 +16,7 @@ import {
   revoke,
 } from "react-native-app-auth";
 import Config from "react-native-config";
-import { LogLevel, OneSignal } from "react-native-onesignal";
-import { removeTypenameFromVariables } from "@apollo/client/link/remove-typename";
-import { from } from "@apollo/client";
-import moment from "moment";
-import axios from "axios";
-import { router } from "expo-router";
-import { user } from "@/types";
-import { jwtDecode } from "jwt-decode";
-import { AuthContext } from "@/context";
+import { config } from "../config";
 
 const defaultAuthState = {
   accessToken: "",
@@ -34,14 +26,11 @@ const defaultAuthState = {
   tokenType: "",
 };
 const getTimeDifference = (targetTimestamp: Date) => {
-  // const now = new Date();
-  // const targetTime = new Date(targetTimestamp);
-  // return targetTime.getTime() - now.getTime(); // Time difference in milliseconds
-
   return new Date(targetTimestamp).getTime() - new Date().getTime();
 };
 
 const makeApolloClient = (token: string) => {
+  console.log("token", token);
   const httpLink = new HttpLink({
     uri: Config.API_HOST,
     headers: { Authorization: `Bearer ${token}` },
@@ -57,19 +46,19 @@ const handleError = (message: string) => {
 };
 
 export const useAuth = () => {
-  const [client, setClient] = useState<ApolloClient<any> | null>(
-    makeApolloClient("")
-  );
+  const [client, setClient] = useState<ApolloClient<any> | null>(null);
   const [userInfo, setUserInfo] = useState<user | null>(null);
 
   const updateAuthState = useCallback(
     async (newAuthState: AuthorizeResult | RefreshResult) => {
-      newAuthState.accessTokenExpirationDate = moment(
-        newAuthState?.accessTokenExpirationDate
-      ).toISOString(); // Ensure expiration date is set
-      if (newAuthState.accessToken) {
-        await AsyncStorage.setItem("auth", JSON.stringify(newAuthState));
-      }
+      // newAuthState.accessTokenExpirationDate = moment(
+      //   newAuthState?.accessTokenExpirationDate
+      // ).toISOString(); // Ensure expiration date is set
+
+      console.log("newAuthState", newAuthState);
+
+      await AsyncStorage.setItem("auth", JSON.stringify(newAuthState));
+
       setClient(makeApolloClient(newAuthState.accessToken));
     },
     []
@@ -87,6 +76,7 @@ export const useAuth = () => {
       );
     }
   }, [updateAuthState]);
+
   const signOut = useCallback(async () => {
     try {
       if (!Platform.isTV) {
@@ -139,6 +129,7 @@ export const useAuth = () => {
         const response = await axios.post(Config.TOKEN_API || "", data, {
           headers: { "Content-Type": "application/x-www-form-urlencoded" },
         });
+
         const token = response?.data?.access_token;
 
         const decode = jwtDecode(token);
@@ -156,7 +147,7 @@ export const useAuth = () => {
           ["email", email],
           ["password", password],
         ]);
-
+        console.log("response", password);
         // Update Apollo Client
         const client = makeApolloClient(token);
         setClient(client);
@@ -196,6 +187,7 @@ export const useAuth = () => {
         console.log("Refresh error:", error);
         await AsyncStorage.clear();
         setUserInfo(null);
+        return false;
       }
     },
     [updateAuthState]
@@ -208,6 +200,7 @@ export const useAuth = () => {
       if (auth) {
         const { accessTokenExpirationDate, refreshToken } = appAuth;
         if (
+          refreshToken &&
           accessTokenExpirationDate &&
           getTimeDifference(accessTokenExpirationDate) < 1000
         ) {
@@ -215,6 +208,7 @@ export const useAuth = () => {
           if (!chkRefresh) return;
         }
         router.replace({ pathname: "/home" });
+        console.log("go home from here");
       } else {
         await updateAuthState(appAuth);
         // Navigate to sign-in screen
@@ -226,6 +220,7 @@ export const useAuth = () => {
       console.log("Not getItem from AsyncStorage Error ", error);
     }
   };
+
   const initializeAuthTv = async () => {
     try {
       let emailAsync = await AsyncStorage.getItem("email");
@@ -242,60 +237,43 @@ export const useAuth = () => {
       console.log("Not getItem from AsyncStorage Error ", error);
     }
   };
+  const clientHandler = async () => {
+    const auth = await AsyncStorage.getItem("auth");
+    const appAuth = auth ? JSON.parse(auth) : defaultAuthState;
+    const client = makeApolloClient(appAuth.accessToken);
+    setClient(client);
+  };
+
   useEffect(() => {
-    if (Platform.isTV) {
-      initializeAuthTv();
-    } else {
-      initializeAuth();
-    }
+    clientHandler();
   }, []);
 
   // useEffect(() => {
-  //   let intervalId;
-  //   const checkTokenExpiry = async () => {
-  //     try {
-  //       const auth = await AsyncStorage.getItem("auth");
-  //       if (auth) {
-  //         const { accessTokenExpirationDate, refreshToken } = JSON.parse(auth);
-  //         if (
-  //           accessTokenExpirationDate &&
-  //           getTimeDifference(accessTokenExpirationDate) < 1000
-  //         ) {
-  //           handleRefresh(refreshToken);
-  //         }
-  //       } else {
-  //         setTimeout(() => {
-  //           router.replace({ pathname: "/auth/SignIn" });
-  //         }, 1000);
-  //       }
-  //     } catch (error) {
-  //       console.log("Error fetching access token:", error);
-  //     }
-  //   };
+  //   if (Platform.isTV) {
+  //     initializeAuthTv();
+  //   } else {
+  //     initializeAuth();
+  //   }
+  // }, []);
 
-  //   intervalId = setInterval(checkTokenExpiry, 5000);
+  // useEffect(() => {
+  //   const intervalId = setInterval(async () => {
+  //     const auth = await AsyncStorage.getItem("auth");
+  //     if (auth) {
+  //       const { accessTokenExpirationDate, refreshToken } = JSON.parse(auth);
+  //       if (
+  //         accessTokenExpirationDate &&
+  //         getTimeDifference(accessTokenExpirationDate) < 1000
+  //       ) {
+  //         await handleRefresh(refreshToken);
+  //       }
+  //     } else {
+  //       setTimeout(() => router.replace({ pathname: "/auth/SignIn" }), 1000);
+  //     }
+  //   }, 5000);
 
   //   return () => clearInterval(intervalId);
   // }, [handleRefresh]);
-
-  useEffect(() => {
-    const intervalId = setInterval(async () => {
-      const auth = await AsyncStorage.getItem("auth");
-      if (auth) {
-        const { accessTokenExpirationDate, refreshToken } = JSON.parse(auth);
-        if (
-          accessTokenExpirationDate &&
-          getTimeDifference(accessTokenExpirationDate) < 1000
-        ) {
-          await handleRefresh(refreshToken);
-        }
-      } else {
-        setTimeout(() => router.replace({ pathname: "/auth/SignIn" }), 1000);
-      }
-    }, 5000);
-
-    return () => clearInterval(intervalId);
-  }, [handleRefresh]);
 
   return {
     client,
@@ -304,5 +282,6 @@ export const useAuth = () => {
     userInfo,
     setUserInfo,
     signInTV,
+    handleRefresh,
   };
 };

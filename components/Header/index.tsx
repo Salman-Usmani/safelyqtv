@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  InteractionManager,
 } from "react-native";
 
 import Moment from "moment";
@@ -38,6 +39,11 @@ export const Header = ({
         onPress: () => signOut(),
         style: "cancel",
       },
+      {
+        text: "Cancel",
+        onPress: () => null,
+        style: "cancel",
+      },
     ]);
   };
 
@@ -55,8 +61,10 @@ export const Header = ({
     // Calculate the time remaining until the next whole minute
     const secondsUntilNextMinute = 60 - new Date().getSeconds();
 
-    // Set the next interval time and run the timer again
-    intervalRef.current = setTimeout(runTimer, secondsUntilNextMinute * 1000);
+    // Use InteractionManager to ensure UI updates are on the main thread
+    InteractionManager.runAfterInteractions(() => {
+      intervalRef.current = setTimeout(runTimer, secondsUntilNextMinute * 1000);
+    });
   };
   useEffect(() => {
     // Start the initial timer
@@ -67,7 +75,7 @@ export const Header = ({
         clearTimeout(intervalRef.current);
       }
     };
-  });
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -109,13 +117,12 @@ export const Header = ({
       </TouchableOpacity>
 
       <Text numberOfLines={1} style={{ fontSize: 18, flex: 1 }}>
-        {params?.businessName}
-        {/* {params?.businessName ? params?.businessName : businessName} */}
+        {params?.businessName ? params?.businessName : businessName}
       </Text>
 
       <View style={styles.row}>
         <Text numberOfLines={1} style={{ fontSize: 18 }}>
-          {dt}{" "}
+          {dt}
         </Text>
         {showLogOut && (
           <TouchableOpacity

@@ -107,3 +107,23 @@ export const GET_BUSINESS_APPOINTMENTS_SUMMARY = gql(`
     }
   }
 `);
+
+export const UPDATE_APPOINTMENT_STATUS = gql`
+  mutation updateAppointmentStatus(
+    $appointmentId: Int!
+    $newStatus: AppointmentStatus!
+  ) {
+    updateAppointmentStatus(
+      appointmentId: $appointmentId
+      newStatus: $newStatus
+    ) {
+      isSaved
+      isCreated
+      errorMessage
+      appointment {
+        id
+        status
+      }
+    }
+  }
+`;

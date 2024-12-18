@@ -5,7 +5,11 @@ import { ThemedText } from "@/components/ThemedText";
 import { Icons } from "@/constants/icons";
 import { Sound } from "@/constants/Sound";
 import { GET_BUSINESS_APPOINTMENTS_SUMMARY } from "@/requests";
-import { AppointmentDateSummary, AppointmentSummary } from "@/types";
+import {
+  AppointmentData,
+  AppointmentDateSummary,
+  AppointmentSummary,
+} from "@/types";
 import { useLazyQuery } from "@apollo/client";
 import { useLocalSearchParams } from "expo-router";
 import moment from "moment";
@@ -13,6 +17,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { FlatList, SafeAreaView, StyleSheet, View } from "react-native";
 import SoundPlayer from "react-native-sound-player";
 import firestore from "@react-native-firebase/firestore";
+import { VerificationModal } from "@/components/VerificationModal";
 
 const SECONDS_IN_AN_HOUR = 3600;
 
@@ -21,6 +26,9 @@ const Dashboard = () => {
   const [appointments, setAppointments] = useState<AppointmentDateSummary[]>(
     []
   );
+  const [isVisible, setIsVisible] = useState(false);
+  const [selectedAppoinment, setSelectedAppoinment] =
+    useState<AppointmentData>();
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [getBusinessAppointmentsSummary, { loading }] = useLazyQuery(
     GET_BUSINESS_APPOINTMENTS_SUMMARY,
@@ -42,12 +50,12 @@ const Dashboard = () => {
 
   const fetchAppointments = async () => {
     try {
-      console.log("data");
+      console.log("data", businessId);
       const { data } = await getBusinessAppointmentsSummary({
         variables: {
           appointmentsSummaryInput: {
             businessId,
-            startDate: moment().format("YYYY-MM-DD"),
+            startDate: moment().add(1, "day").format("YYYY-MM-DD"),
           },
         },
       });
@@ -125,7 +133,14 @@ const Dashboard = () => {
       </ThemedText>
       <View style={styles.cardContainer}>
         {item.appointments?.map((apptData, apptIndex) => (
-          <AppointmentTVCard key={apptIndex} appoitment={apptData} />
+          <AppointmentTVCard
+            key={apptIndex}
+            appoitment={apptData}
+            onPressCheckIn={(selectApt: AppointmentData) => {
+              setSelectedAppoinment(selectApt);
+              setIsVisible(true);
+            }}
+          />
         ))}
       </View>
     </View>
@@ -145,6 +160,15 @@ const Dashboard = () => {
       ) : (
         <NoData heading={"Sorry, no appointments available"} />
       )}
+
+      {isVisible ? (
+        <VerificationModal
+          appointmentId={selectedAppoinment?.id || ""}
+          user={selectedAppoinment?.user || null}
+          isVisible={isVisible}
+          setIsVisible={setIsVisible}
+        />
+      ) : null}
     </SafeAreaView>
   );
 };

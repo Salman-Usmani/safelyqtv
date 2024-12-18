@@ -14,8 +14,15 @@ import { StyleSheet, Text, useColorScheme } from "react-native";
 
 const RootLayout = () => {
   const colorScheme = useColorScheme();
-  const { client, signIn, signOut, signInTV, userInfo, setUserInfo } =
-    useAuth();
+  const {
+    client,
+    signIn,
+    signOut,
+    signInTV,
+    userInfo,
+    setUserInfo,
+    handleRefresh,
+  } = useAuth();
   if (!client) {
     // Optionally, you can return a loading state or null
     return <ThemedText>Loading...</ThemedText>; // Or any other loading indicator
@@ -23,7 +30,9 @@ const RootLayout = () => {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <ApolloProvider client={client}>
-        <AuthContext.Provider value={{ signIn, signOut, signInTV }}>
+        <AuthContext.Provider
+          value={{ signIn, signOut, signInTV, handleRefresh }}
+        >
           <UserInformation.Provider value={{ userInfo, setUserInfo }}>
             <Stack
               screenOptions={{
