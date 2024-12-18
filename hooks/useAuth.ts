@@ -34,24 +34,26 @@ const defaultAuthState = {
   tokenType: "",
 };
 const getTimeDifference = (targetTimestamp: Date) => {
-  const now = new Date();
-  const targetTime = new Date(targetTimestamp);
-  return targetTime.getTime() - now.getTime(); // Time difference in milliseconds
+  // const now = new Date();
+  // const targetTime = new Date(targetTimestamp);
+  // return targetTime.getTime() - now.getTime(); // Time difference in milliseconds
+
+  return new Date(targetTimestamp).getTime() - new Date().getTime();
 };
 
 const makeApolloClient = (token: string) => {
-  const removeTypenameLink = removeTypenameFromVariables();
   const httpLink = new HttpLink({
     uri: Config.API_HOST,
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  const link = from([removeTypenameLink, httpLink]);
-
   return new ApolloClient({
-    link,
+    link: from([removeTypenameFromVariables(), httpLink]),
     cache: new InMemoryCache(),
   });
+};
+const handleError = (message: string) => {
+  Alert.alert("Error", message);
 };
 
 export const useAuth = () => {
@@ -65,8 +67,9 @@ export const useAuth = () => {
       newAuthState.accessTokenExpirationDate = moment(
         newAuthState?.accessTokenExpirationDate
       ).toISOString(); // Ensure expiration date is set
-
-      await AsyncStorage.setItem("auth", JSON.stringify(newAuthState));
+      if (newAuthState.accessToken) {
+        await AsyncStorage.setItem("auth", JSON.stringify(newAuthState));
+      }
       setClient(makeApolloClient(newAuthState.accessToken));
     },
     []
@@ -76,13 +79,12 @@ export const useAuth = () => {
     try {
       const newAuthState = await authorize(config);
       await updateAuthState(newAuthState);
+      router.replace({ pathname: "/home" });
       return newAuthState.accessToken;
     } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert("Failed to log in", error.message);
-      } else {
-        Alert.alert("Failed to log in", "An unknown error occurred");
-      }
+      handleError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
     }
   }, [updateAuthState]);
   const signOut = useCallback(async () => {
@@ -101,11 +103,9 @@ export const useAuth = () => {
       setUserInfo(null);
       await AsyncStorage.clear();
     } catch (error) {
-      if (error instanceof Error) {
-        Alert.alert("Failed to sign out", error.message);
-      } else {
-        Alert.alert("Failed to sign out", "An unknown error occurred");
-      }
+      handleError(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
     } finally {
       router.dismissTo("/auth/SignIn");
     }
@@ -113,20 +113,32 @@ export const useAuth = () => {
 
   const signInTV = useCallback(
     async (email: string, password: string) => {
-      const data = `client_id=${Config.CUSTOM_CLIENT_ID}&grant_type=password&username=${email}&password=${password}&client_secret=${Config.CLIENT_SECRET}&scope=safelyq.users`;
+      // const data = `client_id=${Config.CUSTOM_CLIENT_ID}&grant_type=password&username=${email}&password=${password}&client_secret=${Config.CLIENT_SECRET}&scope=safelyq.users`;
 
-      const axiosConfig = {
-        method: "post",
-        url: Config.TOKEN_API,
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-        data,
-      };
+      const data = new URLSearchParams({
+        client_id: Config.CUSTOM_CLIENT_ID || "",
+        grant_type: "password",
+        username: email,
+        password,
+        client_secret: Config.CLIENT_SECRET || "",
+        scope: "safelyq.users",
+      }).toString();
+
+      // const axiosConfig = {
+      //   method: "post",
+      //   url: Config.TOKEN_API,
+      //   headers: {
+      //     "Content-Type": "application/x-www-form-urlencoded",
+      //   },
+      //   data,
+      // };
 
       try {
         // API Call
-        const response = await axios(axiosConfig);
+        // const response = await axios(axiosConfig);
+        const response = await axios.post(Config.TOKEN_API || "", data, {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        });
         const token = response?.data?.access_token;
 
         const decode = jwtDecode(token);
@@ -174,36 +186,42 @@ export const useAuth = () => {
     [setClient, router]
   );
 
-  // const signOutTV = useCallback(async () => {
-  //   try {
-  //     setUserInfo(null);
-  //     AsyncStorage.clear();
-  //     router.dismissTo("/auth/SignIn");
-  //   } catch {}
-  // }, []);
-
-  const handleRefresh = useCallback(async () => {
-    try {
-      const auth = await AsyncStorage.getItem("auth");
-
-      if (auth) {
-        const { refreshToken } = JSON.parse(auth);
+  const handleRefresh = useCallback(
+    async (refreshToken: string) => {
+      try {
         const newAuthState = await refresh(config, { refreshToken });
         await updateAuthState(newAuthState);
+        return true;
+      } catch (error) {
+        console.log("Refresh error:", error);
+        await AsyncStorage.clear();
+        setUserInfo(null);
       }
-    } catch (error) {
-      console.log("Refresh error:", error);
-      await AsyncStorage.removeItem("auth");
-      OneSignal.logout();
-      setUserInfo(null);
-    }
-  }, [updateAuthState]);
+    },
+    [updateAuthState]
+  );
 
   const initializeAuth = async () => {
     try {
       const auth = await AsyncStorage.getItem("auth");
       const appAuth = auth ? JSON.parse(auth) : defaultAuthState;
-      await updateAuthState(appAuth);
+      if (auth) {
+        const { accessTokenExpirationDate, refreshToken } = appAuth;
+        if (
+          accessTokenExpirationDate &&
+          getTimeDifference(accessTokenExpirationDate) < 1000
+        ) {
+          const chkRefresh = await handleRefresh(refreshToken);
+          if (!chkRefresh) return;
+        }
+        router.replace({ pathname: "/home" });
+      } else {
+        await updateAuthState(appAuth);
+        // Navigate to sign-in screen
+        setTimeout(() => {
+          router.push({ pathname: "/auth/SignIn" });
+        }, 1000);
+      }
     } catch (error) {
       console.log("Not getItem from AsyncStorage Error ", error);
     }
@@ -230,36 +248,51 @@ export const useAuth = () => {
     } else {
       initializeAuth();
     }
-
-    OneSignal.initialize(`${Config.ONESIGNAL_KEY}`);
-    OneSignal.Debug.setLogLevel(LogLevel.Verbose);
-    OneSignal.Notifications.requestPermission(true);
-    OneSignal.Notifications.addEventListener("click", (event) => {
-      console.log("OneSignal: notification clicked:", event);
-    });
   }, []);
 
+  // useEffect(() => {
+  //   let intervalId;
+  //   const checkTokenExpiry = async () => {
+  //     try {
+  //       const auth = await AsyncStorage.getItem("auth");
+  //       if (auth) {
+  //         const { accessTokenExpirationDate, refreshToken } = JSON.parse(auth);
+  //         if (
+  //           accessTokenExpirationDate &&
+  //           getTimeDifference(accessTokenExpirationDate) < 1000
+  //         ) {
+  //           handleRefresh(refreshToken);
+  //         }
+  //       } else {
+  //         setTimeout(() => {
+  //           router.replace({ pathname: "/auth/SignIn" });
+  //         }, 1000);
+  //       }
+  //     } catch (error) {
+  //       console.log("Error fetching access token:", error);
+  //     }
+  //   };
+
+  //   intervalId = setInterval(checkTokenExpiry, 5000);
+
+  //   return () => clearInterval(intervalId);
+  // }, [handleRefresh]);
+
   useEffect(() => {
-    let intervalId;
-
-    const checkTokenExpiry = async () => {
-      try {
-        const auth = await AsyncStorage.getItem("auth");
-        if (auth) {
-          const { accessTokenExpirationDate } = JSON.parse(auth);
-          if (
-            accessTokenExpirationDate &&
-            getTimeDifference(accessTokenExpirationDate) < 1000
-          ) {
-            handleRefresh();
-          }
+    const intervalId = setInterval(async () => {
+      const auth = await AsyncStorage.getItem("auth");
+      if (auth) {
+        const { accessTokenExpirationDate, refreshToken } = JSON.parse(auth);
+        if (
+          accessTokenExpirationDate &&
+          getTimeDifference(accessTokenExpirationDate) < 1000
+        ) {
+          await handleRefresh(refreshToken);
         }
-      } catch (error) {
-        console.log("Error fetching access token:", error);
+      } else {
+        setTimeout(() => router.replace({ pathname: "/auth/SignIn" }), 1000);
       }
-    };
-
-    intervalId = setInterval(checkTokenExpiry, 5000);
+    }, 5000);
 
     return () => clearInterval(intervalId);
   }, [handleRefresh]);

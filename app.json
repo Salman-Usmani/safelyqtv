@@ -18,7 +18,9 @@
         }
       ],
       "@react-native-firebase/app",
-      ["expo-build-properties"],
+      [
+        "expo-build-properties"
+      ],
       "expo-router",
       "expo-font",
       "expo-audio"
@@ -28,12 +30,11 @@
         "image": "./assets/images/splash.png"
       },
       "googleServicesFile": "./google-services.json",
-      "package": "com.safelyqtv"
-    },
-    "ios": {
-      "splash": {
-        "image": "./assets/images/splash.png"
-      }
+      "package": "com.safelyqtv",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "experiments": {
       "typedRoutes": true

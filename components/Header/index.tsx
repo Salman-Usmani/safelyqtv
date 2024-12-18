@@ -29,6 +29,7 @@ export const Header = ({
   const { signOut } = useContext(AuthContext);
   const [headerFocus, setHeaderFocus] = useState(0);
   const [dt, setDt] = useState("");
+  const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
   const handleLogout = () => {
     Alert.alert("Alert", "Are you sure you want to logout from SafelyQ Tv", [
@@ -39,7 +40,6 @@ export const Header = ({
       },
     ]);
   };
-  const intervalRef = React.useRef<NodeJS.Timeout | null>(null);
 
   // Function to update the date and time
   const updateDateTime = () => {
@@ -125,7 +125,7 @@ export const Header = ({
           >
             <Icons.AntDesign
               name="logout"
-              color={headerFocus === 2 ? "lightgray" : "red"}
+              color={headerFocus === 2 ? "gray" : "red"}
               size={23}
             />
           </TouchableOpacity>
@@ -139,6 +139,7 @@ const styles = StyleSheet.create({
   container: {
     width: "auto",
     height: 45,
+    // flex: 1,
     backgroundColor: Colors.light.background,
     paddingHorizontal: 10,
     elevation: 5,
@@ -151,7 +152,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    flex: 1,
+    // flex: 1,
     gap: 10,
   },
   imageContainer: {

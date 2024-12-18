@@ -7,12 +7,12 @@ import { Sound } from "@/constants/Sound";
 import { GET_BUSINESS_APPOINTMENTS_SUMMARY } from "@/requests";
 import { AppointmentDateSummary, AppointmentSummary } from "@/types";
 import { useLazyQuery } from "@apollo/client";
-import firestore from "@react-native-firebase/firestore";
 import { useLocalSearchParams } from "expo-router";
 import moment from "moment";
 import React, { useEffect, useRef, useState } from "react";
 import { FlatList, SafeAreaView, StyleSheet, View } from "react-native";
 import SoundPlayer from "react-native-sound-player";
+import firestore from "@react-native-firebase/firestore";
 
 const SECONDS_IN_AN_HOUR = 3600;
 
@@ -22,8 +22,9 @@ const Dashboard = () => {
     []
   );
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [getBusinessAppointmentsSummary, { loading, data }] = useLazyQuery(
-    GET_BUSINESS_APPOINTMENTS_SUMMARY
+  const [getBusinessAppointmentsSummary, { loading }] = useLazyQuery(
+    GET_BUSINESS_APPOINTMENTS_SUMMARY,
+    { fetchPolicy: "no-cache" }
   );
 
   useEffect(() => {
@@ -41,6 +42,7 @@ const Dashboard = () => {
 
   const fetchAppointments = async () => {
     try {
+      console.log("data");
       const { data } = await getBusinessAppointmentsSummary({
         variables: {
           appointmentsSummaryInput: {

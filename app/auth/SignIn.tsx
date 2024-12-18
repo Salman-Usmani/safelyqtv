@@ -53,11 +53,7 @@ const SignIn = () => {
     if (password.length === 0) {
       ToastAndroid.show("Please enter password", ToastAndroid.SHORT);
     } else {
-      if (Platform.isTV) {
-        signInTV(email, password);
-      } else {
-        signIn();
-      }
+      signInTV(email, password);
     }
   };
   const emailEntered = () => {

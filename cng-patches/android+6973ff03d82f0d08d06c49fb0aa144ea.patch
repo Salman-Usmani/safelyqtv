@@ -1,0 +1,58 @@
+diff --git a/android/app/build.gradle b/android/app/build.gradle
+index d45508b..6238d7d 100644
+--- a/android/app/build.gradle
++++ b/android/app/build.gradle
+@@ -1,6 +1,12 @@
+ apply plugin: "com.android.application"
+ apply plugin: "org.jetbrains.kotlin.android"
+ apply plugin: "com.facebook.react"
++project.ext.envConfigFiles = [
++    debug: ".env",
++    release: ".env.prod",
++]
++
++apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
+ 
+ def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
+ 
+@@ -93,6 +99,9 @@ android {
+         targetSdkVersion rootProject.ext.targetSdkVersion
+         versionCode 1
+         versionName "1.0.0"
++        manifestPlaceholders = [
++          appAuthRedirectScheme: project.env.get("APP_ID")
++        ]
+     }
+     signingConfigs {
+         debug {
+diff --git a/android/app/src/main/AndroidManifest.xml b/android/app/src/main/AndroidManifest.xml
+index e452f4b..094452e 100644
+--- a/android/app/src/main/AndroidManifest.xml
++++ b/android/app/src/main/AndroidManifest.xml
+@@ -6,6 +6,9 @@
+   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+   <uses-permission android:name="android.permission.VIBRATE"/>
+   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
++  <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
++  <uses-feature android:name="android.hardware.faketouch" android:required="false"/>
++  <uses-feature android:name="android.software.leanback" android:required="false"/>
+   <queries>
+     <intent>
+       <action android:name="android.intent.action.VIEW"/>
+@@ -13,7 +16,7 @@
+       <data android:scheme="https"/>
+     </intent>
+   </queries>
+-  <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme" android:supportsRtl="true">
++  <application android:name=".MainApplication" android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="true" android:theme="@style/AppTheme" android:supportsRtl="true" android:banner="@drawable/tv_banner">
+     <meta-data android:name="expo.modules.updates.ENABLED" android:value="false"/>
+     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_CHECK_ON_LAUNCH" android:value="ALWAYS"/>
+     <meta-data android:name="expo.modules.updates.EXPO_UPDATES_LAUNCH_WAIT_MS" android:value="0"/>
+@@ -21,6 +24,7 @@
+       <intent-filter>
+         <action android:name="android.intent.action.MAIN"/>
+         <category android:name="android.intent.category.LAUNCHER"/>
++        <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+       </intent-filter>
+       <intent-filter>
+         <action android:name="android.intent.action.VIEW"/>
